@@ -11,7 +11,7 @@ namespace GeneticAlgorithm
         static void Main(string[] args)
         {
             CellAutomataGA cellAutomataGA = new CellAutomataGA();
-            for(int i = 0; i < 50; i++) {
+            for(int i = 0; i < 20; i++) {
                 cellAutomataGA.NextGeneration();
                 Console.Write("Episode:");
                 Console.WriteLine(i);
@@ -26,7 +26,6 @@ namespace GeneticAlgorithm
                 cellAutomataGame.UpdateGameBoard();
             }
             Console.Read();
-
         }
 
         static int[] MakeLifeGameRule()

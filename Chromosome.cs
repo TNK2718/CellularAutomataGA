@@ -42,6 +42,13 @@ namespace GeneticAlgorithm
             return returnvalue;
         }
 
+        public void SetChromosomeAsRule(int individual, int[] rule)
+        {
+            for(int i = 0; i < chromosomes.GetLength(1); i++) {
+                SetChromosome(individual, i, rule[i]);
+            }
+        }
+
         public override void SetChromosome(int individual, int index, int element)
         {
             if (individual >= 0 && individual < chromosomes.GetLength(0) && index >= 0 && index < chromosomes.GetLength(1)) {
