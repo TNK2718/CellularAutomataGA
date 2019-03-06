@@ -1,12 +1,12 @@
-﻿using System;
+﻿using AboutGeneticAlgorithm;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace GeneticAlgorithm
+namespace AboutGeneticAlgorithm
 {
-    public class CellAutomataGA
+    public class GeneticAlgorithm
     {
         private const int POPULATION = 100;
         private const int ELITE_POPULATION = 2;
@@ -15,7 +15,7 @@ namespace GeneticAlgorithm
         private const int CELL_STATE_SIZE = 8;
         private const double CROSSOVER_RATE = 1;
         private const double MUTATION_RATE = 0.2;
-        private const double MUTATION_RANGE = 0.05; 
+        private const double MUTATION_RANGE = 0.05;
         private const double STABILITY = 1;
         private const int EPISODES_FOR_EVALATION = 50;
         private int chromosomeMaxNumber;
@@ -26,7 +26,7 @@ namespace GeneticAlgorithm
 
         public int[] rulesForEvalate;
 
-        public CellAutomataGA()
+        public GeneticAlgorithm()
         {
             chromosomeMaxNumber = FastPower(CELL_STATE_SIZE, MOORE_NEIGHBORHOOD + 1) - 1;
             intArrayChromosomes = new IntArrayChromosomes(POPULATION, CHROMOSOME_SIZE, chromosomeMaxNumber);
@@ -47,10 +47,10 @@ namespace GeneticAlgorithm
         {
             Random random = new Random();
             for (int i = 0; i < POPULATION; i++) {
-                for(int j = 0; j < CHROMOSOME_SIZE / 20; j++) {
+                for (int j = 0; j < CHROMOSOME_SIZE / 20; j++) {
                     int rule = 0;
-                    for(int k = 0; k < MOORE_NEIGHBORHOOD; k++) {
-                        rule +=  random.Next(0, 2) * FastPower(CELL_STATE_SIZE, k);
+                    for (int k = 0; k < MOORE_NEIGHBORHOOD; k++) {
+                        rule += random.Next(0, 2) * FastPower(CELL_STATE_SIZE, k);
                     }
                     rule += random.Next(0, CELL_STATE_SIZE) * FastPower(CELL_STATE_SIZE, MOORE_NEIGHBORHOOD);
                     intArrayChromosomes.SetChromosome(i, j, rule);
@@ -58,35 +58,22 @@ namespace GeneticAlgorithm
             }
         }
 
-        public void Crossover(IntArrayChromosomes intChromosomes, double crossoverrate, List<int> _elitelist)
+        public void NextGeneration()
+        {
+            Evaluate();
+            SelectElite(ELITE_POPULATION);
+            Crossover(intArrayChromosomes, CROSSOVER_RATE);
+            Mutation(intArrayChromosomes, MUTATION_RATE, elitelist, chromosomeMaxNumber);
+            Reproduce_Ranking(intArrayChromosomes);
+        }
+
+        public void Crossover(IntArrayChromosomes intChromosomes, double crossoverrate)
         {
             Random random = new Random();
-            for(int i = 0; i < POPULATION - 1; i++) {
-                double rnddbl = random.NextDouble();
-                int rndindex = random.Next(i, POPULATION - 1);
-                if (rnddbl <= crossoverrate) {
-                    if(!elitelist.Contains(i) && !elitelist.Contains(rndindex)) {
-                        int point1 = random.Next(0, CHROMOSOME_SIZE);
-                        int point2 = random.Next(0, CHROMOSOME_SIZE);
-                        if (point1 <= point2) intArrayChromosomes.TransChromosome(i, rndindex, point1, point2);
-                        else intArrayChromosomes.TransChromosome(i, rndindex, point2, point1);
-                    }else if (elitelist.Contains(i) && elitelist.Contains(rndindex)) {
-
-                    }
-                    else if (elitelist.Contains(rndindex)) {
-                        int[] eliterule = intChromosomes.ReadChromosomeAsRule(rndindex);
-                        int point1 = random.Next(0, CHROMOSOME_SIZE);
-                        int point2 = random.Next(0, CHROMOSOME_SIZE);
-                        if (point1 <= point2) intArrayChromosomes.TransChromosome(i, rndindex, point1, point2);
-                        else intArrayChromosomes.TransChromosome(i, rndindex, point2, point1);
-                        intChromosomes.SetChromosomeAsRule(rndindex, eliterule);
-                    }else if (elitelist.Contains(i)) {
-                        int[] eliterule = intChromosomes.ReadChromosomeAsRule(i);
-                        int point1 = random.Next(0, CHROMOSOME_SIZE);
-                        int point2 = random.Next(0, CHROMOSOME_SIZE);
-                        if (point1 <= point2) intArrayChromosomes.TransChromosome(i, rndindex, point1, point2);
-                        else intArrayChromosomes.TransChromosome(i, rndindex, point2, point1);
-                        intChromosomes.SetChromosomeAsRule(i, eliterule);
+            for (int i = 0; i < POPULATION - 1; i++) {
+                for (int j = i + 1; j < POPULATION; j++) {
+                    if (random.NextDouble() <= crossoverrate) {
+                        intChromosomes.CrossOverChromosomes(i, j, random.Next(0, CHROMOSOME_SIZE), random.Next(0, CHROMOSOME_SIZE));
                     }
                 }
             }
@@ -94,10 +81,10 @@ namespace GeneticAlgorithm
 
         public void Evaluate()
         {
-            for(int i = 0; i < POPULATION; i++) {
+            for (int i = 0; i < POPULATION; i++) {
                 CellAutomataGame cellAutomataGame = new CellAutomataGame(intArrayChromosomes.ReadChromosomeAsRule(i), rulesForEvalate);
                 cellAutomataGame.InitializeBoards();
-                for(int n = 0; n < EPISODES_FOR_EVALATION; n++) {
+                for (int n = 0; n < EPISODES_FOR_EVALATION; n++) {
                     cellAutomataGame.UpdateGameBoard();
                 }
                 scores[i] = EvaluateFunction(cellAutomataGame);
@@ -108,8 +95,8 @@ namespace GeneticAlgorithm
         {
             double score1 = 0;
             double score2 = 0;
-            for(int x = 0; x < cellAutomataGame.BOARD_SIZE; x++) {
-                for(int y = 0; y < cellAutomataGame.BOARD_SIZE; y++) {
+            for (int x = 0; x < cellAutomataGame.BOARD_SIZE; x++) {
+                for (int y = 0; y < cellAutomataGame.BOARD_SIZE; y++) {
                     if (cellAutomataGame.board1.GetCell(cellAutomataGame.board1.board, x, y) != 0) score1++;
                     score2 += cellAutomataGame.board2.GetCell(cellAutomataGame.board2.board, x, y);
                 }
@@ -120,10 +107,10 @@ namespace GeneticAlgorithm
         public void Mutation(IntArrayChromosomes intChromosomes, double mutationrate, List<int> _elitelist, int chromosomeMaxNumber)
         {
             Random random = new Random();
-            for(int i = 0; i < POPULATION; i++) {
+            for (int i = 0; i < POPULATION; i++) {
                 double rndnum = random.NextDouble();
-                if(rndnum <= mutationrate * (1 - STABILITY * scores[i])) {
-                    for (int j = 0; j < CHROMOSOME_SIZE / 10 * MUTATION_RANGE; j++) {
+                if (rndnum <= mutationrate) {
+                    for (int j = 0; j < CHROMOSOME_SIZE * MUTATION_RANGE; j++) {
                         intChromosomes.SetChromosome(i, random.Next(0, CHROMOSOME_SIZE), random.Next(0, chromosomeMaxNumber));
                     }
                 }
@@ -141,7 +128,7 @@ namespace GeneticAlgorithm
 
             double elitescore = tmpscores[elitepopulation - 1];
             int count = 0;
-            for(int i = 0; i < POPULATION; i++) {
+            for (int i = 0; i < POPULATION; i++) {
                 if (scores[i] >= elitescore) {
                     elitelist.Add(i);
                     count++;
@@ -150,12 +137,14 @@ namespace GeneticAlgorithm
             }
         }
 
-        public void NextGeneration()
+        public void Reproduce_Ranking(IntArrayChromosomes _intArrayChromosomes)
         {
-            Evaluate();
-            SelectElite(ELITE_POPULATION);
-            Crossover(intArrayChromosomes, CROSSOVER_RATE, elitelist);
-            Mutation(intArrayChromosomes, MUTATION_RATE, elitelist, chromosomeMaxNumber);
+            _intArrayChromosomes.SortChromosomes();
+            int index = 0;
+            while (_intArrayChromosomes.GetPopulation() > POPULATION) {
+                _intArrayChromosomes.RemoveChromosome(_intArrayChromosomes.GetPopulation() - 1 - index);
+                index++;
+            }
         }
 
         public int FastPower(int _base, int exponent)
@@ -171,10 +160,10 @@ namespace GeneticAlgorithm
             }
         }
 
-        public int ConvertToConditionNo(int[] input)
+        private int ConvertToConditionNo(int[] input)
         {
             int returnvalue = 0;
-            for(int i = 0; i <= MOORE_NEIGHBORHOOD; i++) {
+            for (int i = 0; i <= MOORE_NEIGHBORHOOD; i++) {
                 returnvalue += FastPower(CELL_STATE_SIZE, i) * input[MOORE_NEIGHBORHOOD - i];
             }
             return returnvalue;
@@ -191,7 +180,7 @@ namespace GeneticAlgorithm
         public void ShowEliteScores()
         {
             Console.WriteLine("EliteScores");
-            foreach(int index in elitelist) {
+            foreach (int index in elitelist) {
                 Console.WriteLine(index);
                 Console.WriteLine(scores[index]);
             }

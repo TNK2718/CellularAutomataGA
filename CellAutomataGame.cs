@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace GeneticAlgorithm
+namespace AboutGeneticAlgorithm
 {
     class CellAutomataGame
     {
@@ -33,9 +32,9 @@ namespace GeneticAlgorithm
 
         private void ApplyCollision()
         {
-            for(int x = 0; x < BOARD_SIZE; x++) {
-                for(int y = 0; y < BOARD_SIZE; y++) {
-                    if(board1.GetCell(board1.board, x, y) != 0 && board2.GetCell(board2.board, x, y) != 0) {
+            for (int x = 0; x < BOARD_SIZE; x++) {
+                for (int y = 0; y < BOARD_SIZE; y++) {
+                    if (board1.GetCell(board1.board, x, y) != 0 && board2.GetCell(board2.board, x, y) != 0) {
                         board1.SetCell(true, x, y, 0);
                         board2.SetCell(true, x, y, 0);
                     }
